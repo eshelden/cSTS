@@ -200,6 +200,7 @@ PNST.genes.sig<-subset(PNST.genes, abs(log2FoldChange) > 1 & padj < .05)
 dim(PNST.genes.sig) #now we have 185 significant genes.
 
 #use heatmap.2 to cluster ALL SAMPLES using the top 185 most significant degs for each sample type.
+#use the result as Figure 2A
 FS.genes.sig<-FS.genes.sig[order(FS.genes.sig$padj, decreasing = F),]
 PWT.genes.sig<-PWT.genes.sig[order(PWT.genes.sig$padj, decreasing = F),]
 PNST.genes.sig<-PNST.genes.sig[order(PNST.genes.sig$padj, decreasing = F),]
@@ -211,6 +212,8 @@ names<-colnames(hDat)
 names[names %in% FS.samples] <- "FS"
 names[names %in% PNST.samples] <- "PNST"
 names[names %in% PWT.samples] <- "PWT"
+names[7]<-paste0(names[7],"*")
+names[14]<-paste0(names[14],"*")
 colnames(hDat)<-paste0(colnames(hDat),names)
 
 hDat<-apply(hDat,1,mNorm) #z scores for each gene
@@ -218,7 +221,9 @@ hDat<-apply(hDat,1,mNorm) #z scores for each gene
 colfunc <- colorRampPalette(c("blue", "white", "red"))
 myColors<-colfunc(50)
 
-heatmap.2(as.matrix(t(hDat)), Colv = TRUE, Rowv = TRUE, dendrogram = "both", col = myColors, trace = "none", keysize = 1, srtCol=45, key.title = NA, key.ylab = NA, cexRow = 1.25, margins = c(5,15), labRow = NA, colsep = c(4,10), sepwidth = c(.1,.1))
+str(hDat)
+
+heatmap.2(as.matrix(t(hDat)), Colv = TRUE, Rowv = TRUE, dendrogram = "both", col = myColors, trace = "none", keysize = .75, srtCol=45, key.title = NA, key.ylab = NA, cexCol= 1.25, margins = c(6.5,15), labRow = NA, colsep = c(4,10), sepwidth = c(.1,.1))
 
 #so, unsupervised heirarchical clustering with the 185 most signficant DEGs for each tumor type
 #calculated from data without the above identified outliers 
@@ -258,3 +263,53 @@ writeDir<-"C:\\Users\\idaho\\Dropbox\\Shelden lab\\Canine SARC analysis\\Results
 write.csv(as.data.frame(FS.genes.sig), file = paste0(writeDir,"\\FS_specific_genes_final.csv"))
 write.csv(as.data.frame(PNST.genes.sig), file = paste0(writeDir,"\\PNST_specific_genes_final.csv"))
 write.csv(as.data.frame(PWT.genes.sig), file = paste0(writeDir,"\\PWT_specific_genes_final.csv"))
+
+setwd("C:\\Users\\idaho\\Dropbox\\Shelden lab\\Canine SARC analysis\\Results\\Tumor type specific gene expression\\Eric")
+setwd("C:\\Users\\Eric Shelden\\Dropbox\\Shelden lab\\Canine SARC analysis\\Results\\Tumor type specific gene expression\\Eric")
+save(FS.genes.sig, PNST.genes.sig, PWT.genes.sig, mCPM, file = "sigGenes.rda")
+
+################# Figure 2A #######################################################
+metaD<-read.csv("C:\\Users\\idaho\\Dropbox\\Shelden lab\\Canine SARC analysis\\Input Data\\Subject Data\\STS Data for study-ES-reassigned.csv")
+metaD<-read.csv("C:\\Users\\Eric Shelden\\Dropbox\\Shelden lab\\Canine SARC analysis\\Input Data\\Subject Data\\STS Data for study-ES-reassigned.csv")
+dim(metaD)
+metaD<-metaD[1:16,1:43]
+#View(metaD)
+rownames(metaD)<-metaD$Sample.ID
+table(metaD$Histology.group) #4 FS, 6 PNST, 6 PWT
+
+FS.samples <- rownames(metaD[metaD$Histology.group == "FS",])
+PNST.samples <- rownames(metaD[metaD$Histology.group == "PNST",])
+PWT.samples <- rownames(metaD[metaD$Histology.group == "PWT",])
+
+setwd("C:\\Users\\idaho\\Dropbox\\Shelden lab\\Canine SARC analysis\\Results\\Tumor type specific gene expression\\Eric")
+setwd("C:\\Users\\Eric Shelden\\Dropbox\\Shelden lab\\Canine SARC analysis\\Results\\Tumor type specific gene expression\\Eric")
+load("sigGenes.rda")
+dim(FS.genes.sig) #2090
+dim(PNST.genes.sig) #291
+dim(PWT.genes.sig) #875
+
+#heatmap of most significant 291 genes
+#use the result as Figure 2A
+FS.genes.sig<-FS.genes.sig[order(FS.genes.sig$padj, decreasing = F),]
+PWT.genes.sig<-PWT.genes.sig[order(PWT.genes.sig$padj, decreasing = F),]
+PNST.genes.sig<-PNST.genes.sig[order(PNST.genes.sig$padj, decreasing = F),]
+
+hGenes<-c(rownames(FS.genes.sig[1:291,]), rownames(PWT.genes.sig[1:291,]), rownames(PNST.genes.sig[1:291,]))
+hDat<-mCPM[hGenes,]
+colnames(hDat)
+names<-colnames(hDat)
+names[names %in% FS.samples] <- "FS"
+names[names %in% PNST.samples] <- "PNST"
+names[names %in% PWT.samples] <- "PWT"
+names[7]<-paste0(names[7],"*")
+names[14]<-paste0(names[14],"*")
+colnames(hDat)<-paste0(colnames(hDat),names)
+
+hDat<-apply(hDat,1,mNorm) #z scores for each gene
+
+colfunc <- colorRampPalette(c("blue", "white", "red"))
+myColors<-colfunc(50)
+
+str(hDat)
+
+heatmap.2(as.matrix(t(hDat)), Colv = TRUE, Rowv = TRUE, dendrogram = "both", col = myColors, trace = "none", keysize = .75, srtCol=45, key.title = NA, key.ylab = NA, cexCol= 1.25, margins = c(6.5,15), labRow = NA, colsep = c(6,12), sepwidth = c(.1,.1))
